@@ -1,5 +1,3 @@
-from os import path
-
 from fastapi import Depends, Path, Request
 from loguru import logger
 

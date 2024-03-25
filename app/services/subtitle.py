@@ -162,9 +162,9 @@ def correct(subtitle_file, video_script):
         with open(subtitle_file, "w", encoding="utf-8") as fd:
             for item in subtitle_items:
                 fd.write(f"{item[0]}\n{item[1]}\n{item[2]}\n\n")
-        logger.info(f"subtitle corrected")
+        logger.info("subtitle corrected")
     else:
-        logger.success(f"subtitle is correct")
+        logger.success("subtitle is correct")
 
 
 if __name__ == "__main__":

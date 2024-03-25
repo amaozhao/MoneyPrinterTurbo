@@ -87,7 +87,7 @@ def task_dir(sub_dir: str = ""):
 
 
 def font_dir(sub_dir: str = ""):
-    d = resource_dir(f"fonts")
+    d = resource_dir("fonts")
     if sub_dir:
         d = os.path.join(d, sub_dir)
     if not os.path.exists(d):
@@ -96,7 +96,7 @@ def font_dir(sub_dir: str = ""):
 
 
 def song_dir(sub_dir: str = ""):
-    d = resource_dir(f"songs")
+    d = resource_dir("songs")
     if sub_dir:
         d = os.path.join(d, sub_dir)
     if not os.path.exists(d):
@@ -105,7 +105,7 @@ def song_dir(sub_dir: str = ""):
 
 
 def public_dir(sub_dir: str = ""):
-    d = resource_dir(f"public")
+    d = resource_dir("public")
     if sub_dir:
         d = os.path.join(d, sub_dir)
     if not os.path.exists(d):

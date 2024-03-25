@@ -110,7 +110,8 @@ def download_videos(
                 found_duration += item.duration
 
     logger.info(
-        f"found total videos: {len(valid_video_items)}, required duration: {audio_duration} seconds, found duration: {found_duration} seconds"
+        f"found total videos: {len(valid_video_items)}, "
+        f"required duration: {audio_duration} seconds, found duration: {found_duration} seconds"
     )
     video_paths = []
     save_dir = utils.task_dir(task_id)

@@ -72,14 +72,14 @@ def start(task_id, params: VideoParams):
 
         logger.debug(f"video terms: {utils.to_json(video_terms)}")
 
-    script_file = path.join(utils.task_dir(task_id), f"script.json")
+    script_file = path.join(utils.task_dir(task_id), "script.json")
     script_data = {"script": video_script, "search_terms": video_terms}
 
     with open(script_file, "w", encoding="utf-8") as f:
         f.write(utils.to_json(script_data))
 
     logger.info("\n\n## generating audio")
-    audio_file = path.join(utils.task_dir(task_id), f"audio.mp3")
+    audio_file = path.join(utils.task_dir(task_id), "audio.mp3")
     sub_maker = voice.tts(
         text=video_script, voice_name=voice_name, voice_file=audio_file
     )
@@ -94,7 +94,7 @@ def start(task_id, params: VideoParams):
 
     subtitle_path = ""
     if params.subtitle_enabled:
-        subtitle_path = path.join(utils.task_dir(task_id), f"subtitle.srt")
+        subtitle_path = path.join(utils.task_dir(task_id), "subtitle.srt")
         subtitle_provider = config.app.get("subtitle_provider", "").strip().lower()
         logger.info(f"\n\n## generating subtitle, provider: {subtitle_provider}")
         subtitle_fallback = False
