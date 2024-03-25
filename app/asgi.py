@@ -3,8 +3,8 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from loguru import logger
 from fastapi.staticfiles import StaticFiles
+from loguru import logger
 
 from app.config import config
 from app.models.exception import HttpException
@@ -22,7 +22,9 @@ def exception_handler(request: Request, e: HttpException):
 def validation_exception_handler(request: Request, e: RequestValidationError):
     return JSONResponse(
         status_code=400,
-        content=utils.get_response(status=400, data=e.errors(), message='field required'),
+        content=utils.get_response(
+            status=400, data=e.errors(), message="field required"
+        ),
     )
 
 

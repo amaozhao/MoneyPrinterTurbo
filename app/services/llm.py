@@ -1,7 +1,8 @@
+import json
 import logging
 import re
-import json
 from typing import List
+
 import g4f
 from loguru import logger
 from openai import OpenAI
@@ -38,14 +39,22 @@ def _generate_response(prompt: str) -> str:
             model_name = config.app.get("oneapi_model_name")
             base_url = config.app.get("oneapi_base_url", "")
         else:
-            raise ValueError("llm_provider is not set, please set it in the config.toml file.")
+            raise ValueError(
+                "llm_provider is not set, please set it in the config.toml file."
+            )
 
         if not api_key:
-            raise ValueError(f"{llm_provider}: api_key is not set, please set it in the config.toml file.")
+            raise ValueError(
+                f"{llm_provider}: api_key is not set, please set it in the config.toml file."
+            )
         if not model_name:
-            raise ValueError(f"{llm_provider}: model_name is not set, please set it in the config.toml file.")
+            raise ValueError(
+                f"{llm_provider}: model_name is not set, please set it in the config.toml file."
+            )
         if not base_url:
-            raise ValueError(f"{llm_provider}: base_url is not set, please set it in the config.toml file.")
+            raise ValueError(
+                f"{llm_provider}: base_url is not set, please set it in the config.toml file."
+            )
 
         client = OpenAI(
             api_key=api_key,
@@ -53,8 +62,7 @@ def _generate_response(prompt: str) -> str:
         )
 
         response = client.chat.completions.create(
-            model=model_name,
-            messages=[{"role": "user", "content": prompt}]
+            model=model_name, messages=[{"role": "user", "content": prompt}]
         )
         if response:
             content = response.choices[0].message.content
@@ -62,7 +70,9 @@ def _generate_response(prompt: str) -> str:
     return content
 
 
-def generate_script(video_subject: str, language: str = "zh-CN", paragraph_number: int = 1) -> str:
+def generate_script(
+    video_subject: str, language: str = "zh-CN", paragraph_number: int = 1
+) -> str:
     prompt = f"""
 # Role: Video Script Generator
 
@@ -153,7 +163,9 @@ Generate {amount} search terms for stock videos, depending on the subject of a v
 
     try:
         search_terms = json.loads(response)
-        if not isinstance(search_terms, list) or not all(isinstance(term, str) for term in search_terms):
+        if not isinstance(search_terms, list) or not all(
+            isinstance(term, str) for term in search_terms
+        ):
             raise ValueError("response is not a list of strings.")
 
     except (json.JSONDecodeError, ValueError):
@@ -173,7 +185,9 @@ Generate {amount} search terms for stock videos, depending on the subject of a v
 
 if __name__ == "__main__":
     video_subject = "生命的意义是什么"
-    script = generate_script(video_subject=video_subject, language="zh-CN", paragraph_number=1)
+    script = generate_script(
+        video_subject=video_subject, language="zh-CN", paragraph_number=1
+    )
     # print("######################")
     # print(script)
     # search_terms = generate_terms(video_subject=video_subject, video_script=script, amount=5)

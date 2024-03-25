@@ -1,12 +1,13 @@
 from os import path
 
-from fastapi import Request, Depends, Path
+from fastapi import Depends, Path, Request
 from loguru import logger
 
 from app.controllers import base
 from app.controllers.v1.base import new_router
 from app.models.exception import HttpException
-from app.models.schema import TaskVideoRequest, TaskQueryResponse, TaskResponse, TaskQueryRequest
+from app.models.schema import (TaskQueryRequest, TaskQueryResponse,
+                               TaskResponse, TaskVideoRequest)
 from app.services import task as tm
 from app.utils import utils
 
@@ -31,14 +32,23 @@ def create_video(request: Request, body: TaskVideoRequest):
         logger.success(f"video created: {utils.to_json(task)}")
         return utils.get_response(200, task)
     except ValueError as e:
-        raise HttpException(task_id=task_id, status_code=400, message=f"{request_id}: {str(e)}")
+        raise HttpException(
+            task_id=task_id, status_code=400, message=f"{request_id}: {str(e)}"
+        )
 
 
 @router.get("/tasks/{task_id}", response_model=TaskQueryResponse, summary="查询任务状态")
-def get_task(request: Request, task_id: str = Path(..., description="任务ID"),
-                   query: TaskQueryRequest = Depends()):
+def get_task(
+    request: Request,
+    task_id: str = Path(..., description="任务ID"),
+    query: TaskQueryRequest = Depends(),
+):
     request_id = base.get_task_id(request)
     data = query.dict()
     data["task_id"] = task_id
-    raise HttpException(task_id=task_id, status_code=404,
-                        message=f"{request_id}: task not found", data=data)
+    raise HttpException(
+        task_id=task_id,
+        status_code=404,
+        message=f"{request_id}: task not found",
+        data=data,
+    )
