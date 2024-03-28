@@ -2,11 +2,9 @@ import json
 import logging
 import re
 from typing import List
-
-import g4f
 from loguru import logger
 from openai import OpenAI
-
+from openai import AzureOpenAI
 from app.config import config
 
 
@@ -18,12 +16,13 @@ def _generate_response(prompt: str) -> str:
         model_name = config.app.get("g4f_model_name", "")
         if not model_name:
             model_name = "gpt-3.5-turbo-16k-0613"
-
+        import g4f
         content = g4f.ChatCompletion.create(
             model=model_name,
             messages=[{"role": "user", "content": prompt}],
         )
     else:
+        api_version = ""  # for azure
         if llm_provider == "moonshot":
             api_key = config.app.get("moonshot_api_key")
             model_name = config.app.get("moonshot_model_name")
@@ -38,6 +37,15 @@ def _generate_response(prompt: str) -> str:
             api_key = config.app.get("oneapi_api_key")
             model_name = config.app.get("oneapi_model_name")
             base_url = config.app.get("oneapi_base_url", "")
+        elif llm_provider == "azure":
+            api_key = config.app.get("azure_api_key")
+            model_name = config.app.get("azure_model_name")
+            base_url = config.app.get("azure_base_url", "")
+            api_version = config.app.get("azure_api_version", "2024-02-15-preview")
+        elif llm_provider == "qwen":
+            api_key = config.app.get("qwen_api_key")
+            model_name = config.app.get("qwen_model_name")
+            base_url = "***"
         else:
             raise ValueError(
                 "llm_provider is not set, please set it in the config.toml file."
@@ -56,10 +64,27 @@ def _generate_response(prompt: str) -> str:
                 f"{llm_provider}: base_url is not set, please set it in the config.toml file."
             )
 
-        client = OpenAI(
-            api_key=api_key,
-            base_url=base_url,
-        )
+        if llm_provider == "qwen":
+            import dashscope
+            dashscope.api_key = api_key
+            response = dashscope.Generation.call(
+                model=model_name,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            content = response["output"]["text"]
+            return content.replace("\n", "")
+
+        if llm_provider == "azure":
+            client = AzureOpenAI(
+                api_key=api_key,
+                api_version=api_version,
+                azure_endpoint=base_url,
+            )
+        else:
+            client = OpenAI(
+                api_key=api_key,
+                base_url=base_url,
+            )
 
         response = client.chat.completions.create(
             model=model_name, messages=[{"role": "user", "content": prompt}]
@@ -67,12 +92,10 @@ def _generate_response(prompt: str) -> str:
         if response:
             content = response.choices[0].message.content
 
-    return content
+    return content.replace("\n", "")
 
 
-def generate_script(
-    video_subject: str, language: str = "zh-CN", paragraph_number: int = 1
-) -> str:
+def generate_script(video_subject: str, language: str = "", paragraph_number: int = 1) -> str:
     prompt = f"""
 # Role: Video Script Generator
 
@@ -91,13 +114,12 @@ Generate a script for a video, depending on the subject of the video.
 the amount of paragraphs or lines. just write the script.
 8. respond in the same language as the video subject.
 
-## Output Example:
-What is the meaning of life. This question has puzzled philosophers.
-
 # Initialization:
 - video subject: {video_subject}
 - number of paragraphs: {paragraph_number}
 """.strip()
+    if language:
+        prompt += f"\n- language: {language}"
 
     final_script = ""
     logger.info(f"subject: {video_subject}")

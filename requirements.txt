@@ -1,5 +1,6 @@
 aiohttp
 black
+dashscope
 edge_tts
 fastapi
 faster-whisper
