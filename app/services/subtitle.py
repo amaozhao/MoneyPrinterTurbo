@@ -171,6 +171,7 @@ if __name__ == "__main__":
     task_id = "c12fd1e6-4b0a-4d65-a075-c87abe35a072"
     task_dir = utils.task_dir(task_id)
     subtitle_file = f"{task_dir}/subtitle.srt"
+    audio_file = f"{task_dir}/audio.mp3"
 
     subtitles = file_to_subtitles(subtitle_file)
     print(subtitles)
@@ -182,3 +183,6 @@ if __name__ == "__main__":
     script = s.get("script")
 
     correct(subtitle_file, script)
+
+    subtitle_file = f"{task_dir}/subtitle-test.srt"
+    create(audio_file, subtitle_file)

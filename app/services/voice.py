@@ -70,7 +70,10 @@ def create_subtitle(sub_maker: submaker.SubMaker, text: str, subtitle_file: str)
 
             sub = unescape(sub)
             sub_line += sub
-            if sub_line == script_lines[sub_index] or sub_line == script_lines_without_space[sub_index]:
+            if (
+                sub_line == script_lines[sub_index]
+                or sub_line == script_lines_without_space[sub_index]
+            ):
                 sub_text = script_lines[sub_index]
                 sub_index += 1
                 line = formatter(

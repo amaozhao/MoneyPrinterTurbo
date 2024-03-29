@@ -2,9 +2,10 @@ import json
 import logging
 import re
 from typing import List
+
 from loguru import logger
-from openai import OpenAI
-from openai import AzureOpenAI
+from openai import AzureOpenAI, OpenAI
+
 from app.config import config
 
 
@@ -17,6 +18,7 @@ def _generate_response(prompt: str) -> str:
         if not model_name:
             model_name = "gpt-3.5-turbo-16k-0613"
         import g4f
+
         content = g4f.ChatCompletion.create(
             model=model_name,
             messages=[{"role": "user", "content": prompt}],
@@ -66,10 +68,10 @@ def _generate_response(prompt: str) -> str:
 
         if llm_provider == "qwen":
             import dashscope
+
             dashscope.api_key = api_key
             response = dashscope.Generation.call(
-                model=model_name,
-                messages=[{"role": "user", "content": prompt}]
+                model=model_name, messages=[{"role": "user", "content": prompt}]
             )
             content = response["output"]["text"]
             return content.replace("\n", "")
@@ -95,7 +97,9 @@ def _generate_response(prompt: str) -> str:
     return content.replace("\n", "")
 
 
-def generate_script(video_subject: str, language: str = "", paragraph_number: int = 1) -> str:
+def generate_script(
+    video_subject: str, language: str = "", paragraph_number: int = 1
+) -> str:
     prompt = f"""
 # Role: Video Script Generator
 
@@ -178,6 +182,8 @@ Generate {amount} search terms for stock videos, depending on the subject of a v
 
 ### Video Script
 {video_script}
+
+Please note that you must use English for generating video search terms; Chinese is not accepted.
 """.strip()
 
     logger.info(f"subject: {video_subject}")

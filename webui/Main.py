@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 from uuid import uuid4
 
@@ -9,28 +10,17 @@ from app.models.schema import (VideoAspect, VideoConcatMode, VideoParams,
                                VoiceNames)
 from app.services import llm
 from app.services import task as tm
-
-st.set_page_config(
-    page_title="MoneyPrinterTurbo",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="auto",
-)
+from app.utils import utils
 
 hide_streamlit_style = """
 <style>#root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}</style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 st.title("MoneyPrinterTurbo")
-st.write(
-    "⚠️ 先在 **config.toml** 中设置 `pexels_api_keys` 和 `llm_provider` 参数，根据不同的 llm_provider，配置对应的 **API KEY**"
-)
 
 root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 font_dir = os.path.join(root_dir, "resource", "fonts")
 song_dir = os.path.join(root_dir, "resource", "songs")
-
-# st.session_state
 
 if "video_subject" not in st.session_state:
     st.session_state["video_subject"] = ""
@@ -56,6 +46,36 @@ def get_all_songs():
             if file.endswith(".mp3"):
                 songs.append(file)
     return songs
+
+
+def open_task_folder(task_id):
+    try:
+        sys = platform.system()
+        path = os.path.join(root_dir, "storage", "tasks", task_id)
+        if os.path.exists(path):
+            if sys == "Windows":
+                os.system(f"start {path}")
+            if sys == "Darwin":
+                os.system(f"open {path}")
+    except Exception as e:
+        logger.error(e)
+
+
+def scroll_to_bottom():
+    js = """
+    <script>
+        console.log("scroll_to_bottom");
+        function scroll(dummy_var_to_force_repeat_execution){{
+            var sections = parent.document.querySelectorAll('section.main');
+            console.log(sections);
+            for(let index = 0; index<sections.length; index++) {{
+                sections[index].scrollTop = sections[index].scrollHeight;
+            }}
+        }}
+        scroll(1);
+    </script>
+    """
+    st.components.v1.html(js, height=0, width=0)
 
 
 def init_log():
@@ -97,14 +117,15 @@ left_panel = panel[0]
 middle_panel = panel[1]
 right_panel = panel[2]
 
-# define cfg as VideoParams class
 cfg = VideoParams()
 
 with left_panel:
     with st.container(border=True):
         st.write("**文案设置**")
-        cfg.video_subject = st.text_input("视频主题（给定一个关键词，:red[AI自动生成]视频文案）",
-                                          value=st.session_state['video_subject']).strip()
+        cfg.video_subject = st.text_input(
+            "视频主题（给定一个关键词，:red[AI自动生成]视频文案）",
+            value=st.session_state["video_subject"],
+        ).strip()
 
         video_languages = [
             ("自动判断（Auto detect）", ""),
@@ -112,18 +133,24 @@ with left_panel:
         for lang in ["zh-CN", "zh-TW", "en-US"]:
             video_languages.append((lang, lang))
 
-        selected_index = st.selectbox("生成视频脚本的语言（:blue[一般情况AI会自动根据你输入的主题语言输出]）",
-                                      index=0,
-                                      options=range(len(video_languages)),  # 使用索引作为内部选项值
-                                      format_func=lambda x: video_languages[x][0]  # 显示给用户的是标签
-                                      )
+        selected_index = st.selectbox(
+            "生成视频脚本的语言（:blue[一般情况AI会自动根据你输入的主题语言输出]）",
+            index=0,
+            options=range(len(video_languages)),  # 使用索引作为内部选项值
+            format_func=lambda x: video_languages[x][0],  # 显示给用户的是标签
+        )
         cfg.video_language = video_languages[selected_index][1]
 
         if cfg.video_language:
             st.write(f"设置AI输出文案语言为: **:red[{cfg.video_language}]**")
-        if st.button("点击使用AI根据**主题**生成 【视频文案】 和 【视频关键词】", key="auto_generate_script"):
+        if st.button(
+            "点击使用AI根据**主题**生成 【视频文案】 和 【视频关键词】",
+            key="auto_generate_script",
+        ):
             with st.spinner("AI正在生成视频文案和关键词..."):
-                script = llm.generate_script(video_subject=cfg.video_subject, language=cfg.video_language)
+                script = llm.generate_script(
+                    video_subject=cfg.video_subject, language=cfg.video_language
+                )
                 terms = llm.generate_terms(cfg.video_subject, script)
                 st.toast("AI生成成功")
                 st.session_state["video_script"] = script
@@ -131,10 +158,12 @@ with left_panel:
 
         cfg.video_script = st.text_area(
             "视频文案（:blue[①可不填，使用AI生成  ②合理使用标点断句，有助于生成字幕]）",
-            value=st.session_state['video_script'],
-            height=230
+            value=st.session_state["video_script"],
+            height=180,
         )
-        if st.button("点击使用AI根据**文案**生成【视频关键词】", key="auto_generate_terms"):
+        if st.button(
+            "点击使用AI根据**文案**生成【视频关键词】", key="auto_generate_terms"
+        ):
             if not cfg.video_script:
                 st.error("请先填写视频文案")
                 st.stop()
@@ -180,7 +209,9 @@ with middle_panel:
         cfg.video_clip_duration = st.selectbox(
             "视频片段最大时长(秒)", options=[2, 3, 4, 5, 6], index=1
         )
-        cfg.video_count = st.selectbox("同时生成视频数量", options=[1, 2, 3, 4, 5], index=0)
+        cfg.video_count = st.selectbox(
+            "同时生成视频数量", options=[1, 2, 3, 4, 5], index=0
+        )
     with st.container(border=True):
         st.write("**音频设置**")
         # 创建一个映射字典，将原始值映射到友好名称
@@ -231,7 +262,9 @@ with middle_panel:
 with right_panel:
     with st.container(border=True):
         st.write("**字幕设置**")
-        cfg.subtitle_enabled = st.checkbox("生成字幕（若取消勾选，下面的设置都将不生效）", value=True)
+        cfg.subtitle_enabled = st.checkbox(
+            "生成字幕（若取消勾选，下面的设置都将不生效）", value=True
+        )
         font_names = get_all_fonts()
         cfg.font_name = st.selectbox("字体", font_names)
 
@@ -265,12 +298,10 @@ if start_button:
     task_id = str(uuid4())
     if not cfg.video_subject and not cfg.video_script:
         st.error("视频主题 或 视频文案，不能同时为空")
+        scroll_to_bottom()
         st.stop()
 
-    st.write(cfg)
-
     log_container = st.empty()
-
     log_records = []
 
     def log_received(msg):
@@ -280,6 +311,11 @@ if start_button:
 
     logger.add(log_received)
 
+    st.toast("正在生成视频，请稍候...")
     logger.info("开始生成视频")
+    logger.info(utils.to_json(cfg))
+    scroll_to_bottom()
 
     tm.start(task_id=task_id, params=cfg)
+    open_task_folder(task_id)
+    logger.info("完成")

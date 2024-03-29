@@ -51,7 +51,7 @@ def start(task_id, params: VideoParams):
         video_script = llm.generate_script(
             video_subject=video_subject,
             language=params.video_language,
-            paragraph_number=paragraph_number
+            paragraph_number=paragraph_number,
         )
     else:
         logger.debug(f"video script: \n{video_script}")

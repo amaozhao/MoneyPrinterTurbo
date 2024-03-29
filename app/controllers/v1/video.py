@@ -35,7 +35,9 @@ def create_video(request: Request, body: TaskVideoRequest):
         )
 
 
-@router.get("/tasks/{task_id}", response_model=TaskQueryResponse, summary="查询任务状态")
+@router.get(
+    "/tasks/{task_id}", response_model=TaskQueryResponse, summary="查询任务状态"
+)
 def get_task(
     request: Request,
     task_id: str = Path(..., description="任务ID"),
