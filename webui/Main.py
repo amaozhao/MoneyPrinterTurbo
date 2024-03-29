@@ -9,6 +9,12 @@ import streamlit as st
 import toml
 from loguru import logger
 
+from app.models.schema import VideoAspect, VideoConcatMode, VideoParams
+from app.services import llm
+from app.services import task as tm
+from app.services import voice
+from app.utils import utils
+
 st.set_page_config(
     page_title="MoneyPrinterTurbo",
     page_icon="🤖",
@@ -22,12 +28,6 @@ st.set_page_config(
         "video.\n\nhttps://github.com/harry0703/MoneyPrinterTurbo",
     },
 )
-
-from app.models.schema import VideoAspect, VideoConcatMode, VideoParams
-from app.services import llm
-from app.services import task as tm
-from app.services import voice
-from app.utils import utils
 
 hide_streamlit_style = """
 <style>#root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}</style>
@@ -45,7 +45,7 @@ config_file = os.path.join(root_dir, "webui", ".streamlit", "webui.toml")
 def load_config() -> dict:
     try:
         return toml.load(config_file)
-    except Exception as e:
+    except Exception as e:  # noqa
         return {}
 
 
@@ -64,7 +64,7 @@ def get_system_locale():
         # en_US, en_GB return en
         language_code = loc[0].split("_")[0]
         return language_code
-    except Exception as e:
+    except Exception as e:  # noqa
         return "en"
 
 
@@ -110,7 +110,7 @@ def open_task_folder(task_id):
 
 
 def scroll_to_bottom():
-    js = f"""
+    js = """
     <script>
         console.log("scroll_to_bottom");
         function scroll(dummy_var_to_force_repeat_execution){{
@@ -306,7 +306,7 @@ with middle_panel:
         if saved_voice_name in friendly_names:
             saved_voice_name_index = list(friendly_names.keys()).index(saved_voice_name)
         else:
-            for i, voice in enumerate(voices):
+            for i, voice in enumerate(voices):  # noqa
                 if voice.lower().startswith(st.session_state["ui_language"].lower()):
                     saved_voice_name_index = i
                     break
