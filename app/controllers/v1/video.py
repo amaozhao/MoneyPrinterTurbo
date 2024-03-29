@@ -4,8 +4,12 @@ from loguru import logger
 from app.controllers import base
 from app.controllers.v1.base import new_router
 from app.models.exception import HttpException
-from app.models.schema import (TaskQueryRequest, TaskQueryResponse,
-                               TaskResponse, TaskVideoRequest)
+from app.models.schema import (
+    TaskQueryRequest,
+    TaskQueryResponse,
+    TaskResponse,
+    TaskVideoRequest,
+)
 from app.services import task as tm
 from app.utils import utils
 
