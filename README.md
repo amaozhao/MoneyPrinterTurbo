@@ -1,10 +1,20 @@
-# MoneyPrinterTurbo 💸
+<div align="center">
+<h1 align="center">MoneyPrinterTurbo 💸</h1>
 
-[English](README-en.md)
+<p align="center">
+  <a href="https://github.com/harry0703/MoneyPrinterTurbo/stargazers"><img src="https://img.shields.io/github/stars/harry0703/MoneyPrinterTurbo.svg?style=for-the-badge" alt="Stargazers"></a>
+  <a href="https://github.com/harry0703/MoneyPrinterTurbo/issues"><img src="https://img.shields.io/github/issues/harry0703/MoneyPrinterTurbo.svg?style=for-the-badge" alt="Issues"></a>
+  <a href="https://github.com/harry0703/MoneyPrinterTurbo/network/members"><img src="https://img.shields.io/github/forks/harry0703/MoneyPrinterTurbo.svg?style=for-the-badge" alt="Forks"></a>
+  <a href="https://github.com/harry0703/MoneyPrinterTurbo/blob/main/LICENSE"><img src="https://img.shields.io/github/license/harry0703/MoneyPrinterTurbo.svg?style=for-the-badge" alt="License"></a>
+</p>
+
+[English](README-en.md) | 简体中文
 
 只需提供一个视频 **主题** 或 **关键词** ，就可以全自动生成视频文案、视频素材、视频字幕、视频背景音乐，然后合成一个高清的短视频。
 
 ![](docs/webui.jpg)
+
+</div>
 
 ## 特别感谢 🙏
 
@@ -31,37 +41,59 @@
 - [x] 支持 **字幕生成**，可以调整 `字体`、`位置`、`颜色`、`大小`，同时支持`字幕描边`设置
 - [x] 支持 **背景音乐**，随机或者指定音乐文件，可设置`背景音乐音量`
 - [x] 视频素材来源 **高清**，而且 **无版权**
-- [x] 支持 **OpenAI**、**moonshot**、**Azure**、**gpt4free**、**one-api**、**通义千问** 等多种模型接入
+- [x] 支持 **OpenAI**、**moonshot**、**Azure**、**gpt4free**、**one-api**、**通义千问**、**Google Gemini** 等多种模型接入
 
 ### 后期计划 📅
 
 - [ ] GPT-SoVITS 配音支持
 - [ ] 优化语音合成，利用大模型，使其合成的声音，更加自然，情绪更加丰富
 - [ ] 增加视频转场效果，使其看起来更加的流畅
-- [ ] 优化视频素材的匹配度
+- [ ] 增加更多视频素材来源，优化视频素材和文案的匹配度
 - [ ] OLLAMA 支持
+- [ ] 增加视频长度选项：短、中、长
+- [ ] 制作Docker镜像，方便部署
+- [ ] 打包成一键启动包（Windows，macOS），方便使用
+- [ ] 增加免费网络代理，让访问OpenAI和素材下载不再受限
+- [ ] 可以使用自己的素材
+- [ ] 朗读声音和背景音乐，提供实时试听
+- [ ] 支持更多的语音合成服务商，比如 OpenAI TTS
+- [ ] 自动上传到YouTube平台
 
 ## 视频演示 📺
 
 ### 竖屏 9:16
 
-▶️ 《如何增加生活的乐趣》
-
-https://github.com/harry0703/MoneyPrinterTurbo/assets/4928832/a84d33d5-27a2-4aba-8fd0-9fb2bd91c6a6
-
-▶️ 《生命的意义是什么》
-
-https://github.com/harry0703/MoneyPrinterTurbo/assets/4928832/112c9564-d52b-4472-99ad-970b75f66476
+<table>
+<thead>
+<tr>
+<th align="center"><g-emoji class="g-emoji" alias="arrow_forward">▶️</g-emoji> 《如何增加生活的乐趣》</th>
+<th align="center"><g-emoji class="g-emoji" alias="arrow_forward">▶️</g-emoji> 《生命的意义是什么》</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><video src="https://github.com/harry0703/MoneyPrinterTurbo/assets/4928832/a84d33d5-27a2-4aba-8fd0-9fb2bd91c6a6"></video></td>
+<td align="center"><video src="https://github.com/harry0703/MoneyPrinterTurbo/assets/4928832/112c9564-d52b-4472-99ad-970b75f66476"></video></td>
+</tr>
+</tbody>
+</table>
 
 ### 横屏 16:9
 
-▶️《生命的意义是什么》
-
-https://github.com/harry0703/MoneyPrinterTurbo/assets/4928832/346ebb15-c55f-47a9-a653-114f08bb8073
-
-▶️《为什么要运动》
-
-https://github.com/harry0703/MoneyPrinterTurbo/assets/4928832/271f2fae-8283-44a0-8aa0-0ed8f9a6fa87
+<table>
+<thead>
+<tr>
+<th align="center"><g-emoji class="g-emoji" alias="arrow_forward">▶️</g-emoji>《生命的意义是什么》</th>
+<th align="center"><g-emoji class="g-emoji" alias="arrow_forward">▶️</g-emoji>《为什么要运动》</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><video src="https://github.com/harry0703/MoneyPrinterTurbo/assets/4928832/346ebb15-c55f-47a9-a653-114f08bb8073"></video></td>
+<td align="center"><video src="https://github.com/harry0703/MoneyPrinterTurbo/assets/4928832/271f2fae-8283-44a0-8aa0-0ed8f9a6fa87"></video></td>
+</tr>
+</tbody>
+</table>
 
 ## 安装部署 📥
 

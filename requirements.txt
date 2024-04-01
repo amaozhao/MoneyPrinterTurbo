@@ -5,6 +5,7 @@ edge_tts
 fastapi
 faster-whisper
 g4f
+google.generativeai
 isort
 loguru
 moviepy
