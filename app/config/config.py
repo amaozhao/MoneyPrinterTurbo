@@ -12,7 +12,7 @@ if not os.path.isfile(config_file):
         import shutil
 
         shutil.copyfile(example_file, config_file)
-        logger.info(f"copy config.example.toml to config.toml")
+        logger.info("copy config.example.toml to config.toml")
 
 logger.info(f"load config from file: {config_file}")
 
@@ -30,9 +30,10 @@ listen_host = _cfg.get("listen_host", "0.0.0.0")
 listen_port = _cfg.get("listen_port", 8080)
 project_name = _cfg.get("project_name", "MoneyPrinterTurbo")
 project_description = _cfg.get(
-    "project_description", "MoneyPrinterTurbo\n by 抖音-网旭哈瑞.AI"
+    "project_description",
+    "<a href='https://github.com/harry0703/MoneyPrinterTurbo'>https://github.com/harry0703/MoneyPrinterTurbo</a>",
 )
-project_version = _cfg.get("project_version", "1.0.0")
+project_version = _cfg.get("project_version", "1.0.1")
 reload_debug = False
 
 imagemagick_path = app.get("imagemagick_path", "")

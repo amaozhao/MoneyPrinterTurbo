@@ -1087,7 +1087,9 @@ def create_subtitle(sub_maker: submaker.SubMaker, text: str, subtitle_file: str)
             with open(subtitle_file, "w", encoding="utf-8") as file:
                 file.write("\n".join(sub_items) + "\n")
         else:
-            logger.warning(f"failed, sub_items len: {len(sub_items)}, script_lines len: {len(script_lines)}")
+            logger.warning(
+                f"failed, sub_items len: {len(sub_items)}, script_lines len: {len(script_lines)}"
+            )
 
     except Exception as e:
         logger.error(f"failed, error: {str(e)}")

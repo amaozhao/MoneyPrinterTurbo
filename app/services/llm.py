@@ -3,10 +3,10 @@ import logging
 import re
 from typing import List
 
-from loguru import logger
-from openai import OpenAI
-from openai import AzureOpenAI
 import google.generativeai as genai
+from loguru import logger
+from openai import AzureOpenAI, OpenAI
+
 from app.config import config
 
 
@@ -94,26 +94,26 @@ def _generate_response(prompt: str) -> str:
             safety_settings = [
                 {
                     "category": "HARM_CATEGORY_HARASSMENT",
-                    "threshold": "BLOCK_ONLY_HIGH"
+                    "threshold": "BLOCK_ONLY_HIGH",
                 },
                 {
                     "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_ONLY_HIGH"
+                    "threshold": "BLOCK_ONLY_HIGH",
                 },
                 {
                     "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold": "BLOCK_ONLY_HIGH"
+                    "threshold": "BLOCK_ONLY_HIGH",
                 },
                 {
                     "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold": "BLOCK_ONLY_HIGH"
+                    "threshold": "BLOCK_ONLY_HIGH",
                 },
             ]
 
             model = genai.GenerativeModel(
                 model_name=model_name,
                 generation_config=generation_config,
-                safety_settings=safety_settings
+                safety_settings=safety_settings,
             )
 
             convo = model.start_chat(history=[])

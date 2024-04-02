@@ -292,7 +292,9 @@ with middle_panel:
         )
     with st.container(border=True):
         st.write(tr("Audio Settings"))
-        voices = voice.get_all_voices(filter_locals=["zh-CN", "zh-HK", "zh-TW", "de-DE", "en-US"])
+        voices = voice.get_all_voices(
+            filter_locals=["zh-CN", "zh-HK", "zh-TW", "de-DE", "en-US"]
+        )
         friendly_names = {
             voice: voice.replace("Female", tr("Female"))
             .replace("Male", tr("Male"))

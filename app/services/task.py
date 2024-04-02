@@ -6,8 +6,11 @@ from os import path
 from loguru import logger
 
 from app.config import config
+from app.models import const
 from app.models.schema import VideoConcatMode, VideoParams
-from app.services import llm, material, subtitle, video, voice
+from app.services import llm, material
+from app.services import state as sm
+from app.services import subtitle, video, voice
 from app.utils import utils
 
 
@@ -26,6 +29,8 @@ def start(task_id, params: VideoParams):
     }
     """
     logger.info(f"start task: {task_id}")
+    sm.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=5)
+
     video_subject = params.video_subject
     voice_name = voice.parse_voice_name(params.voice_name)
     paragraph_number = params.paragraph_number
@@ -42,6 +47,8 @@ def start(task_id, params: VideoParams):
         )
     else:
         logger.debug(f"video script: \n{video_script}")
+
+    sm.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=10)
 
     logger.info("\n\n## generating video terms")
     video_terms = params.video_terms
@@ -65,12 +72,15 @@ def start(task_id, params: VideoParams):
     with open(script_file, "w", encoding="utf-8") as f:
         f.write(utils.to_json(script_data))
 
+    sm.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=20)
+
     logger.info("\n\n## generating audio")
     audio_file = path.join(utils.task_dir(task_id), "audio.mp3")
     sub_maker = voice.tts(
         text=video_script, voice_name=voice_name, voice_file=audio_file
     )
     if sub_maker is None:
+        sm.update_task(task_id, state=const.TASK_STATE_FAILED)
         logger.error(
             "failed to generate audio, maybe the network is not available. if you are in China, please use a VPN."
         )
@@ -78,6 +88,8 @@ def start(task_id, params: VideoParams):
 
     audio_duration = voice.get_audio_duration(sub_maker)
     audio_duration = math.ceil(audio_duration)
+
+    sm.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=30)
 
     subtitle_path = ""
     if params.subtitle_enabled:
@@ -110,6 +122,8 @@ def start(task_id, params: VideoParams):
             logger.warning(f"subtitle file is invalid: {subtitle_path}")
             subtitle_path = ""
 
+    sm.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=40)
+
     logger.info("\n\n## downloading videos")
     downloaded_videos = material.download_videos(
         task_id=task_id,
@@ -120,16 +134,20 @@ def start(task_id, params: VideoParams):
         max_clip_duration=max_clip_duration,
     )
     if not downloaded_videos:
+        sm.update_task(task_id, state=const.TASK_STATE_FAILED)
         logger.error(
             "failed to download videos, maybe the network is not available. if you are in China, please use a VPN."
         )
         return
+
+    sm.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=50)
 
     final_video_paths = []
     video_concat_mode = params.video_concat_mode
     if params.video_count > 1:
         video_concat_mode = VideoConcatMode.random
 
+    _progress = 50
     for i in range(params.video_count):
         index = i + 1
         combined_video_path = path.join(
@@ -146,6 +164,9 @@ def start(task_id, params: VideoParams):
             threads=n_threads,
         )
 
+        _progress += 50 / params.video_count / 2
+        sm.update_task(task_id, progress=_progress)
+
         final_video_path = path.join(utils.task_dir(task_id), f"final-{index}.mp4")
 
         logger.info(f"\n\n## generating video: {index} => {final_video_path}")
@@ -157,12 +178,18 @@ def start(task_id, params: VideoParams):
             output_file=final_video_path,
             params=params,
         )
+
+        _progress += 50 / params.video_count / 2
+        sm.update_task(task_id, progress=_progress)
+
         final_video_paths.append(final_video_path)
 
     logger.success(
         f"task {task_id} finished, generated {len(final_video_paths)} videos."
     )
 
-    return {
+    kwargs = {
         "videos": final_video_paths,
     }
+    sm.update_task(task_id, state=const.TASK_STATE_COMPLETE, progress=100, **kwargs)
+    return kwargs
