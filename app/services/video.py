@@ -86,14 +86,13 @@ def combine_videos(
                         y_center=clip.h / 2,
                     )
                 else:
-                    clip = crop(
-                        clip,
-                        width=round(0.5625 * clip.h),
-                        height=clip.h,
-                        x_center=clip.w / 2,
-                        y_center=clip.h / 2,
-                    )
-                logger.info(f"resizing video to {video_width} x {video_height}")
+                    clip = crop(clip,
+                                width=round(0.5625 * clip.h),
+                                height=clip.h,
+                                x_center=clip.w / 2,
+                                y_center=clip.h / 2
+                                )
+                logger.info(f"resizing video to {video_width} x {video_height}, clip size: {clip.w} x {clip.h}")
                 clip = clip.resize((video_width, video_height))
 
             if clip.duration > max_clip_duration:
@@ -105,7 +104,8 @@ def combine_videos(
     final_clip = concatenate_videoclips(clips)
     final_clip = final_clip.set_fps(30)
     logger.info("writing")
-    final_clip.write_videofile(combined_video_path, threads=threads)
+    # https://github.com/harry0703/MoneyPrinterTurbo/issues/111#issuecomment-2032354030
+    final_clip.write_videofile(combined_video_path, threads=threads, logger=None)
     logger.success("completed")
     return combined_video_path
 
