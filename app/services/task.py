@@ -67,7 +67,11 @@ def start(task_id, params: VideoParams):
         logger.debug(f"video terms: {utils.to_json(video_terms)}")
 
     script_file = path.join(utils.task_dir(task_id), "script.json")
-    script_data = {"script": video_script, "search_terms": video_terms}
+    script_data = {
+        "script": video_script,
+        "search_terms": video_terms,
+        "params": params,
+    }
 
     with open(script_file, "w", encoding="utf-8") as f:
         f.write(utils.to_json(script_data))
@@ -104,13 +108,6 @@ def start(task_id, params: VideoParams):
             if not os.path.exists(subtitle_path):
                 subtitle_fallback = True
                 logger.warning("subtitle file not found, fallback to whisper")
-            else:
-                subtitle_lines = subtitle.file_to_subtitles(subtitle_path)
-                if not subtitle_lines:
-                    logger.warning(
-                        f"subtitle file is invalid, fallback to whisper : {subtitle_path}"
-                    )
-                    subtitle_fallback = True
 
         if subtitle_provider == "whisper" or subtitle_fallback:
             subtitle.create(audio_file=audio_file, subtitle_file=subtitle_path)
@@ -143,6 +140,7 @@ def start(task_id, params: VideoParams):
     sm.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=50)
 
     final_video_paths = []
+    combined_video_paths = []
     video_concat_mode = params.video_concat_mode
     if params.video_count > 1:
         video_concat_mode = VideoConcatMode.random
@@ -183,13 +181,12 @@ def start(task_id, params: VideoParams):
         sm.update_task(task_id, progress=_progress)
 
         final_video_paths.append(final_video_path)
+        combined_video_paths.append(combined_video_path)
 
     logger.success(
         f"task {task_id} finished, generated {len(final_video_paths)} videos."
     )
 
-    kwargs = {
-        "videos": final_video_paths,
-    }
+    kwargs = {"videos": final_video_paths, "combined_videos": combined_video_paths}
     sm.update_task(task_id, state=const.TASK_STATE_COMPLETE, progress=100, **kwargs)
     return kwargs

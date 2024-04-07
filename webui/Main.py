@@ -239,7 +239,7 @@ with left_panel:
                 st.session_state["video_terms"] = ", ".join(terms)
 
         params.video_script = st.text_area(
-            tr("Video Script"), value=st.session_state["video_script"], height=180
+            tr("Video Script"), value=st.session_state["video_script"], height=280
         )
         if st.button(tr("Generate Video Keywords"), key="auto_generate_terms"):
             if not params.video_script:
@@ -324,6 +324,11 @@ with middle_panel:
         cfg["voice_name"] = voice_name
         save_config()
 
+        params.voice_volume = st.selectbox(
+            tr("Speech Volume"),
+            options=[0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 3.0, 4.0, 5.0],
+            index=2,
+        )
         bgm_options = [
             (tr("No Background Music"), ""),
             (tr("Random Background Music"), "random"),
@@ -405,6 +410,19 @@ if start_button:
     logger.info(utils.to_json(params))
     scroll_to_bottom()
 
-    tm.start(task_id=task_id, params=params)
+    result = tm.start(task_id=task_id, params=params)
+
+    video_files = result.get("videos", [])
+    st.success(tr("Video Generation Completed"))
+    try:
+        if video_files:
+            # center the video player
+            player_cols = st.columns(len(video_files) * 2 + 1)
+            for i, url in enumerate(video_files):
+                player_cols[i * 2 + 1].video(url)
+    except Exception as e:  # noqa
+        pass
+
     open_task_folder(task_id)
     logger.info(tr("Video Generation Completed"))
+    scroll_to_bottom()
