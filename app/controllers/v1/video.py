@@ -31,7 +31,7 @@ def create_video(
         task = {
             "task_id": task_id,
             "request_id": request_id,
-            "params": body.dict(),
+            "params": body.model_dump(),
         }
         sm.update_task(task_id)
         background_tasks.add_task(tm.start, task_id=task_id, params=body)
