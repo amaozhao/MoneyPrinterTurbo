@@ -1,7 +1,9 @@
 """Application implementation - ASGI."""
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
@@ -48,6 +50,17 @@ def get_application() -> FastAPI:
 
 
 app = get_application()
+
+# Configures the CORS middleware for the FastAPI app
+cors_allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "")
+origins = cors_allowed_origins_str.split(",") if cors_allowed_origins_str else ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 task_dir = utils.task_dir()
 app.mount(
