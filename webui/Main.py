@@ -1,12 +1,9 @@
-import json
-import locale
-import os
-import platform
 import sys
-from uuid import uuid4
-
+import os
 import streamlit as st
-import toml
+
+from uuid import uuid4
+import platform
 from loguru import logger
 
 from app.models.schema import VideoAspect, VideoConcatMode, VideoParams
@@ -14,6 +11,16 @@ from app.services import llm
 from app.services import task as tm
 from app.services import voice
 from app.utils import utils
+from app.config import config
+
+# Add the root directory of the project to the system path to allow importing modules from the project
+root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+if root_dir not in sys.path:
+    sys.path.append(root_dir)
+    print("******** sys.path ********")
+    print(sys.path)
+    print("")
+
 
 st.set_page_config(
     page_title="MoneyPrinterTurbo",
@@ -35,38 +42,11 @@ hide_streamlit_style = """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 st.title("MoneyPrinterTurbo")
 
-root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 font_dir = os.path.join(root_dir, "resource", "fonts")
 song_dir = os.path.join(root_dir, "resource", "songs")
 i18n_dir = os.path.join(root_dir, "webui", "i18n")
 config_file = os.path.join(root_dir, "webui", ".streamlit", "webui.toml")
-
-
-def load_config() -> dict:
-    try:
-        return toml.load(config_file)
-    except Exception as e:  # noqa
-        return {}
-
-
-cfg = load_config()
-
-
-def save_config():
-    with open(config_file, "w", encoding="utf-8") as f:
-        f.write(toml.dumps(cfg))
-
-
-def get_system_locale():
-    try:
-        loc = locale.getdefaultlocale()
-        # zh_CN, zh_TW return zh
-        # en_US, en_GB return en
-        language_code = loc[0].split("_")[0]
-        return language_code
-    except Exception as e:  # noqa
-        return "en"
-
+system_locale = utils.get_system_locale()
 
 if "video_subject" not in st.session_state:
     st.session_state["video_subject"] = ""
@@ -75,7 +55,7 @@ if "video_script" not in st.session_state:
 if "video_terms" not in st.session_state:
     st.session_state["video_terms"] = ""
 if "ui_language" not in st.session_state:
-    st.session_state["ui_language"] = cfg.get("ui_language", get_system_locale())
+    st.session_state["ui_language"] = config.ui.get("language", system_locale)
 
 
 def get_all_fonts():
@@ -160,19 +140,7 @@ def init_log():
 
 init_log()
 
-
-def load_locales():
-    locales = {}
-    for root, dirs, files in os.walk(i18n_dir):
-        for file in files:
-            if file.endswith(".json"):
-                lang = file.split(".")[0]
-                with open(os.path.join(root, file), "r", encoding="utf-8") as f:
-                    locales[lang] = json.loads(f.read())
-    return locales
-
-
-locales = load_locales()
+locales = utils.load_locales(i18n_dir)
 
 
 def tr(key):
@@ -180,24 +148,92 @@ def tr(key):
     return loc.get("Translation", {}).get(key, key)
 
 
-display_languages = []
-selected_index = 0
-for i, code in enumerate(locales.keys()):
-    display_languages.append(f"{code} - {locales[code].get('Language')}")
-    if code == st.session_state["ui_language"]:
-        selected_index = i
+st.write(tr("Get Help"))
 
-selected_language = st.selectbox(
-    "Language",
-    options=display_languages,
-    label_visibility="collapsed",
-    index=selected_index,
-)
-if selected_language:
-    code = selected_language.split(" - ")[0].strip()
-    st.session_state["ui_language"] = code
-    cfg["ui_language"] = code
-    save_config()
+with st.expander(tr("Basic Settings"), expanded=False):
+    config_panels = st.columns(3)
+    left_config_panel = config_panels[0]
+    middle_config_panel = config_panels[1]
+    right_config_panel = config_panels[2]
+    with left_config_panel:
+        display_languages = []
+        selected_index = 0
+        for i, code in enumerate(locales.keys()):
+            display_languages.append(f"{code} - {locales[code].get('Language')}")
+            if code == st.session_state["ui_language"]:
+                selected_index = i
+
+        selected_language = st.selectbox(
+            tr("Language"), options=display_languages, index=selected_index
+        )
+        if selected_language:
+            code = selected_language.split(" - ")[0].strip()
+            st.session_state["ui_language"] = code
+            config.ui["language"] = code
+            config.save_config()
+
+    with middle_config_panel:
+        #   openai
+        #   moonshot (月之暗面)
+        #   oneapi
+        #   g4f
+        #   azure
+        #   qwen (通义千问)
+        #   gemini
+        #   ollama
+        llm_providers = [
+            "OpenAI",
+            "Moonshot",
+            "Azure",
+            "Qwen",
+            "Gemini",
+            "Ollama",
+            "G4f",
+            "OneAPI",
+        ]
+        saved_llm_provider = config.app.get("llm_provider", "OpenAI").lower()
+        saved_llm_provider_index = 0
+        for i, provider in enumerate(llm_providers):
+            if provider.lower() == saved_llm_provider:
+                saved_llm_provider_index = i
+                break
+
+        llm_provider = st.selectbox(
+            tr("LLM Provider"), options=llm_providers, index=saved_llm_provider_index
+        )
+        llm_provider = llm_provider.lower()
+        config.app["llm_provider"] = llm_provider
+
+        llm_api_key = config.app.get(f"{llm_provider}_api_key", "")
+        llm_base_url = config.app.get(f"{llm_provider}_base_url", "")
+        llm_model_name = config.app.get(f"{llm_provider}_model_name", "")
+        st_llm_api_key = st.text_input(
+            tr("API Key"), value=llm_api_key, type="password"
+        )
+        st_llm_base_url = st.text_input(tr("Base Url"), value=llm_base_url)
+        st_llm_model_name = st.text_input(tr("Model Name"), value=llm_model_name)
+        if st_llm_api_key:
+            config.app[f"{llm_provider}_api_key"] = st_llm_api_key
+        if st_llm_base_url:
+            config.app[f"{llm_provider}_base_url"] = st_llm_base_url
+        if st_llm_model_name:
+            config.app[f"{llm_provider}_model_name"] = st_llm_model_name
+
+        config.save_config()
+
+    with right_config_panel:
+        pexels_api_keys = config.app.get("pexels_api_keys", [])
+        if isinstance(pexels_api_keys, str):
+            pexels_api_keys = [pexels_api_keys]
+        pexels_api_key = ", ".join(pexels_api_keys)
+
+        pexels_api_key = st.text_input(
+            tr("Pexels API Key"), value=pexels_api_key, type="password"
+        )
+        pexels_api_key = pexels_api_key.replace(" ", "")
+        if pexels_api_key:
+            config.app["pexels_api_keys"] = pexels_api_key.split(",")
+            config.save_config()
 
 panel = st.columns(3)
 left_panel = panel[0]
@@ -301,7 +337,7 @@ with middle_panel:
             .replace("Neural", "")
             for voice in voices
         }
-        saved_voice_name = cfg.get("voice_name", "")
+        saved_voice_name = config.ui.get("voice_name", "")
         saved_voice_name_index = 0
         if saved_voice_name in friendly_names:
             saved_voice_name_index = list(friendly_names.keys()).index(saved_voice_name)
@@ -321,8 +357,8 @@ with middle_panel:
             list(friendly_names.values()).index(selected_friendly_name)
         ]
         params.voice_name = voice_name
-        cfg["voice_name"] = voice_name
-        save_config()
+        config.ui["voice_name"] = voice_name
+        config.save_config()
 
         params.voice_volume = st.selectbox(
             tr("Speech Volume"),
@@ -360,7 +396,15 @@ with right_panel:
         st.write(tr("Subtitle Settings"))
         params.subtitle_enabled = st.checkbox(tr("Enable Subtitles"), value=True)
         font_names = get_all_fonts()
-        params.font_name = st.selectbox(tr("Font"), font_names)
+        saved_font_name = config.ui.get("font_name", "")
+        saved_font_name_index = 0
+        if saved_font_name in font_names:
+            saved_font_name_index = font_names.index(saved_font_name)
+        params.font_name = st.selectbox(
+            tr("Font"), font_names, index=saved_font_name_index
+        )
+        config.ui["font_name"] = params.font_name
+        config.save_config()
 
         subtitle_positions = [
             (tr("Top"), "top"),
@@ -377,9 +421,16 @@ with right_panel:
 
         font_cols = st.columns([0.3, 0.7])
         with font_cols[0]:
-            params.text_fore_color = st.color_picker(tr("Font Color"), "#FFFFFF")
+            saved_text_fore_color = config.ui.get("text_fore_color", "#FFFFFF")
+            params.text_fore_color = st.color_picker(
+                tr("Font Color"), saved_text_fore_color
+            )
+            config.ui["text_fore_color"] = params.text_fore_color
+
         with font_cols[1]:
-            params.font_size = st.slider(tr("Font Size"), 30, 100, 60)
+            saved_font_size = config.ui.get("font_size", 60)
+            params.font_size = st.slider(tr("Font Size"), 30, 100, saved_font_size)
+            config.ui["font_size"] = params.font_size
 
         stroke_cols = st.columns([0.3, 0.7])
         with stroke_cols[0]:
@@ -389,9 +440,20 @@ with right_panel:
 
 start_button = st.button(tr("Generate Video"), use_container_width=True, type="primary")
 if start_button:
+    config.save_config()
     task_id = str(uuid4())
     if not params.video_subject and not params.video_script:
         st.error(tr("Video Script and Subject Cannot Both Be Empty"))
+        scroll_to_bottom()
+        st.stop()
+
+    if not config.app.get(f"{llm_provider}_api_key", ""):
+        st.error(tr("Please Enter the LLM API Key"))
+        scroll_to_bottom()
+        st.stop()
+
+    if not config.app.get("pexels_api_keys", ""):
+        st.error(tr("Please Enter the Pexels API Key"))
         scroll_to_bottom()
         st.stop()
 

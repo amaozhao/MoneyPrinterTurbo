@@ -1,4 +1,5 @@
 """Application implementation - ASGI."""
+
 import os
 
 from fastapi import FastAPI, Request

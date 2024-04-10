@@ -2,12 +2,11 @@ import json
 import logging
 import re
 from typing import List
-
-import google.generativeai as genai
 from loguru import logger
-from openai import AzureOpenAI, OpenAI
-
+from openai import OpenAI
+from openai import AzureOpenAI
 from app.config import config
+import google.generativeai as genai
 
 
 def _generate_response(prompt: str) -> str:

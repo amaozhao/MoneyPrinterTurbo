@@ -1,6 +1,8 @@
 import json
+import locale
 import os
 import threading
+import hashlib
 from typing import Any
 from uuid import uuid4
 
@@ -172,6 +174,26 @@ def split_string_by_punctuations(s):
 
 
 def md5(text):
-    import hashlib
-
     return hashlib.md5(text.encode("utf-8")).hexdigest()
+
+
+def get_system_locale():
+    try:
+        loc = locale.getdefaultlocale()
+        # zh_CN, zh_TW return zh
+        # en_US, en_GB return en
+        language_code = loc[0].split("_")[0]
+        return language_code
+    except Exception as e:  # noqa
+        return "en"
+
+
+def load_locales(i18n_dir):
+    _locales = {}
+    for root, dirs, files in os.walk(i18n_dir):
+        for file in files:
+            if file.endswith(".json"):
+                lang = file.split(".")[0]
+                with open(os.path.join(root, file), "r", encoding="utf-8") as f:
+                    _locales[lang] = json.loads(f.read())
+    return _locales
