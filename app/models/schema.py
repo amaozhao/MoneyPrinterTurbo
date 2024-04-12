@@ -227,8 +227,8 @@ class TaskDeletionResponse(BaseResponse):
                     ],
                     "combined_videos": [
                         "http://127.0.0.1:8080/tasks/6c85c8cc-a77a-42b9-bc30-947815aa0558/combined-1.mp4"
-                    ]
-                }
+                    ],
+                },
             },
         }
 
