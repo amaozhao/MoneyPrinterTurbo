@@ -40,7 +40,7 @@ hide_streamlit_style = """
 <style>#root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}</style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-st.title("MoneyPrinterTurbo")
+st.title(f"MoneyPrinterTurbo v{config.project_version}")
 
 font_dir = os.path.join(root_dir, "resource", "fonts")
 song_dir = os.path.join(root_dir, "resource", "songs")
@@ -190,6 +190,7 @@ with st.expander(tr("Basic Settings"), expanded=False):
             "Ollama",
             "G4f",
             "OneAPI",
+            "Cloudflare",
         ]
         saved_llm_provider = config.app.get("llm_provider", "OpenAI").lower()
         saved_llm_provider_index = 0
@@ -207,6 +208,7 @@ with st.expander(tr("Basic Settings"), expanded=False):
         llm_api_key = config.app.get(f"{llm_provider}_api_key", "")
         llm_base_url = config.app.get(f"{llm_provider}_base_url", "")
         llm_model_name = config.app.get(f"{llm_provider}_model_name", "")
+        llm_account_id = config.app.get(f"{llm_provider}_account_id", "")
         st_llm_api_key = st.text_input(
             tr("API Key"), value=llm_api_key, type="password"
         )
@@ -218,6 +220,11 @@ with st.expander(tr("Basic Settings"), expanded=False):
             config.app[f"{llm_provider}_base_url"] = st_llm_base_url
         if st_llm_model_name:
             config.app[f"{llm_provider}_model_name"] = st_llm_model_name
+
+        if llm_provider == "cloudflare":
+            st_llm_account_id = st.text_input(tr("Account ID"), value=llm_account_id)
+            if st_llm_account_id:
+                config.app[f"{llm_provider}_account_id"] = st_llm_account_id
 
         config.save_config()
 
@@ -447,7 +454,7 @@ if start_button:
         scroll_to_bottom()
         st.stop()
 
-    if not config.app.get(f"{llm_provider}_api_key", ""):
+    if llm_provider != "g4f" and not config.app.get(f"{llm_provider}_api_key", ""):
         st.error(tr("Please Enter the LLM API Key"))
         scroll_to_bottom()
         st.stop()

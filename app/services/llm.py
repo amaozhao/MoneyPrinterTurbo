@@ -5,6 +5,8 @@ from typing import List
 from loguru import logger
 from openai import OpenAI
 from openai import AzureOpenAI
+from openai.types.chat import ChatCompletion
+
 from app.config import config
 import google.generativeai as genai
 
@@ -59,6 +61,11 @@ def _generate_response(prompt: str) -> str:
             api_key = config.app.get("qwen_api_key")
             model_name = config.app.get("qwen_model_name")
             base_url = "***"
+        elif llm_provider == "cloudflare":
+            api_key = config.app.get("cloudflare_api_key")
+            model_name = config.app.get("cloudflare_model_name")
+            account_id = config.app.get("cloudflare_account_id")
+            base_url = "***"
         else:
             raise ValueError(
                 "llm_provider is not set, please set it in the config.toml file."
@@ -79,13 +86,28 @@ def _generate_response(prompt: str) -> str:
 
         if llm_provider == "qwen":
             import dashscope
+            from dashscope.api_entities.dashscope_response import GenerationResponse
 
             dashscope.api_key = api_key
             response = dashscope.Generation.call(
                 model=model_name, messages=[{"role": "user", "content": prompt}]
             )
-            content = response["output"]["text"]
-            return content.replace("\n", "")
+            if response:
+                if isinstance(response, GenerationResponse):
+                    status_code = response.status_code
+                    if status_code != 200:
+                        raise Exception(
+                            f'[{llm_provider}] returned an error response: "{response}"'
+                        )
+
+                    content = response["output"]["text"]
+                    return content.replace("\n", "")
+                else:
+                    raise Exception(
+                        f'[{llm_provider}] returned an invalid response: "{response}"'
+                    )
+            else:
+                raise Exception(f"[{llm_provider}] returned an empty response")
 
         if llm_provider == "gemini":
             genai.configure(api_key=api_key)
@@ -127,6 +149,23 @@ def _generate_response(prompt: str) -> str:
             convo.send_message(prompt)
             return convo.last.text
 
+        if llm_provider == "cloudflare":
+            import requests
+
+            response = requests.post(
+                f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{model_name}",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={
+                    "messages": [
+                        {"role": "system", "content": "You are a friendly assistant"},
+                        {"role": "user", "content": prompt},
+                    ]
+                },
+            )
+            result = response.json()
+            logger.info(result)
+            return result["result"]["response"]
+
         if llm_provider == "azure":
             client = AzureOpenAI(
                 api_key=api_key,
@@ -143,7 +182,17 @@ def _generate_response(prompt: str) -> str:
             model=model_name, messages=[{"role": "user", "content": prompt}]
         )
         if response:
-            content = response.choices[0].message.content
+            if isinstance(response, ChatCompletion):
+                content = response.choices[0].message.content
+            else:
+                raise Exception(
+                    f'[{llm_provider}] returned an invalid response: "{response}", please check your network '
+                    f"connection and try again."
+                )
+        else:
+            raise Exception(
+                f"[{llm_provider}] returned an empty response, please check your network connection and try again."
+            )
 
     return content.replace("\n", "")
 
