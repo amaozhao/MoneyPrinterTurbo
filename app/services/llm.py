@@ -110,7 +110,7 @@ def _generate_response(prompt: str) -> str:
                 raise Exception(f"[{llm_provider}] returned an empty response")
 
         if llm_provider == "gemini":
-            genai.configure(api_key=api_key)
+            genai.configure(api_key=api_key, transport='rest')
 
             generation_config = {
                 "temperature": 0.5,
@@ -144,10 +144,14 @@ def _generate_response(prompt: str) -> str:
                 safety_settings=safety_settings,
             )
 
-            convo = model.start_chat(history=[])
+            try:
+                response = model.generate_content(prompt)
+                candidates = response.candidates
+                generated_text = candidates[0].content.parts[0].text
+            except (AttributeError, IndexError) as e:
+                print("Gemini Error:", e)
 
-            convo.send_message(prompt)
-            return convo.last.text
+            return generated_text
 
         if llm_provider == "cloudflare":
             import requests
@@ -212,10 +216,8 @@ Generate a script for a video, depending on the subject of the video.
 3. get straight to the point, don't start with unnecessary things like, "welcome to this video".
 4. you must not include any type of markdown or formatting in the script, never use a title.
 5. only return the raw content of the script.
-6. do not include "voiceover", "narrator" or similar indicators of what should be spoken
-   at the beginning of each paragraph or line.
-7. you must not mention the prompt, or anything about the script itself. also, never talk about
-the amount of paragraphs or lines. just write the script.
+6. do not include "voiceover", "narrator" or similar indicators of what should be spoken at the beginning of each paragraph or line.
+7. you must not mention the prompt, or anything about the script itself. also, never talk about the amount of paragraphs or lines. just write the script.
 8. respond in the same language as the video subject.
 
 # Initialization:

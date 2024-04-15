@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 
 import requests
 from loguru import logger
+from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from app.config import config
 from app.models.schema import MaterialInfo, VideoAspect, VideoConcatMode
@@ -106,7 +107,19 @@ def save_video(video_url: str, save_dir: str = "") -> str:
         )
 
     if os.path.exists(video_path) and os.path.getsize(video_path) > 0:
-        return video_path
+        try:
+            clip = VideoFileClip(video_path)
+            duration = clip.duration
+            fps = clip.fps
+            clip.close()
+            if duration > 0 and fps > 0:
+                return video_path
+        except Exception as e:
+            try:
+                os.remove(video_path)
+            except Exception as e:
+                pass
+            logger.warning(f"invalid video file: {video_path} => {str(e)}")
     return ""
 
 
