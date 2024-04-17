@@ -169,9 +169,8 @@ with st.expander(tr("Basic Settings"), expanded=False):
         )
         if selected_language:
             code = selected_language.split(" - ")[0].strip()
-            st.session_state["ui_language"] = code
-            config.ui["language"] = code
-            config.save_config()
+            st.session_state['ui_language'] = code
+            config.ui['language'] = code
 
     with middle_config_panel:
         #   openai
@@ -227,8 +226,6 @@ with st.expander(tr("Basic Settings"), expanded=False):
             if st_llm_account_id:
                 config.app[f"{llm_provider}_account_id"] = st_llm_account_id
 
-        config.save_config()
-
     with right_config_panel:
         pexels_api_keys = config.app.get("pexels_api_keys", [])
         if isinstance(pexels_api_keys, str):
@@ -241,7 +238,6 @@ with st.expander(tr("Basic Settings"), expanded=False):
         pexels_api_key = pexels_api_key.replace(" ", "")
         if pexels_api_key:
             config.app["pexels_api_keys"] = pexels_api_key.split(",")
-            config.save_config()
 
 panel = st.columns(3)
 left_panel = panel[0]
@@ -336,22 +332,20 @@ with middle_panel:
         )
     with st.container(border=True):
         st.write(tr("Audio Settings"))
-        voices = voice.get_all_voices(
-            filter_locals=["zh-CN", "zh-HK", "zh-TW", "de-DE", "en-US"]
-        )
+        voices = voice.get_all_azure_voices(filter_locals=["zh-CN", "zh-HK", "zh-TW", "de-DE", "en-US", "fr-FR"])
         friendly_names = {
-            voice: voice.replace("Female", tr("Female"))
-            .replace("Male", tr("Male"))
-            .replace("Neural", "")
-            for voice in voices
-        }
+            v: v.
+            replace("Female", tr("Female")).
+            replace("Male", tr("Male")).
+            replace("Neural", "") for
+            v in voices}
         saved_voice_name = config.ui.get("voice_name", "")
         saved_voice_name_index = 0
         if saved_voice_name in friendly_names:
             saved_voice_name_index = list(friendly_names.keys()).index(saved_voice_name)
         else:
-            for i, voice in enumerate(voices):  # noqa
-                if voice.lower().startswith(st.session_state["ui_language"].lower()):
+            for i, v in enumerate(voices):
+                if v.lower().startswith(st.session_state['ui_language'].lower()):
                     saved_voice_name_index = i
                     break
 
@@ -365,8 +359,14 @@ with middle_panel:
             list(friendly_names.values()).index(selected_friendly_name)
         ]
         params.voice_name = voice_name
-        config.ui["voice_name"] = voice_name
-        config.save_config()
+        config.ui['voice_name'] = voice_name
+        if voice.is_azure_v2_voice(voice_name):
+            saved_azure_speech_region = config.azure.get("speech_region", "")
+            saved_azure_speech_key = config.azure.get("speech_key", "")
+            azure_speech_region = st.text_input(tr("Speech Region"), value=saved_azure_speech_region)
+            azure_speech_key = st.text_input(tr("Speech Key"), value=saved_azure_speech_key, type="password")
+            config.azure["speech_region"] = azure_speech_region
+            config.azure["speech_key"] = azure_speech_key
 
         params.voice_volume = st.selectbox(
             tr("Speech Volume"),
@@ -408,11 +408,8 @@ with right_panel:
         saved_font_name_index = 0
         if saved_font_name in font_names:
             saved_font_name_index = font_names.index(saved_font_name)
-        params.font_name = st.selectbox(
-            tr("Font"), font_names, index=saved_font_name_index
-        )
-        config.ui["font_name"] = params.font_name
-        config.save_config()
+        params.font_name = st.selectbox(tr("Font"), font_names, index=saved_font_name_index)
+        config.ui['font_name'] = params.font_name
 
         subtitle_positions = [
             (tr("Top"), "top"),
@@ -496,3 +493,5 @@ if start_button:
     open_task_folder(task_id)
     logger.info(tr("Video Generation Completed"))
     scroll_to_bottom()
+
+config.save_config()
