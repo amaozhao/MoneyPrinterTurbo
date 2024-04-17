@@ -12,7 +12,7 @@ from moviepy.editor import (
     concatenate_videoclips,
     TextClip,
     CompositeAudioClip,
-    afx
+    afx,
 )
 from moviepy.video.tools.subtitles import SubtitlesClip
 from PIL import ImageFont
@@ -123,13 +123,14 @@ def combine_videos(
     video_clip = video_clip.set_fps(30)
     logger.info("writing")
     # https://github.com/harry0703/MoneyPrinterTurbo/issues/111#issuecomment-2032354030
-    video_clip.write_videofile(filename=combined_video_path,
-                               threads=threads,
-                               logger=None,
-                               temp_audiofile_path=output_dir,
-                               audio_codec="aac",
-                               fps=30,
-                               )
+    video_clip.write_videofile(
+        filename=combined_video_path,
+        threads=threads,
+        logger=None,
+        temp_audiofile_path=output_dir,
+        audio_codec="aac",
+        fps=30,
+    )
     video_clip.close()
     logger.success("completed")
     return combined_video_path
@@ -267,22 +268,23 @@ def generate_video(
     bgm_file = get_bgm_file(bgm_type=params.bgm_type, bgm_file=params.bgm_file)
     if bgm_file:
         try:
-            bgm_clip = (AudioFileClip(bgm_file)
-                        .volumex(params.bgm_volume)
-                        .audio_fadeout(3))
+            bgm_clip = (
+                AudioFileClip(bgm_file).volumex(params.bgm_volume).audio_fadeout(3)
+            )
             bgm_clip = afx.audio_loop(bgm_clip, duration=video_clip.duration)
             audio_clip = CompositeAudioClip([audio_clip, bgm_clip])
         except Exception as e:
             logger.error(f"failed to add bgm: {str(e)}")
 
     video_clip = video_clip.set_audio(audio_clip)
-    video_clip.write_videofile(output_file,
-                               audio_codec="aac",
-                               temp_audiofile_path=output_dir,
-                               threads=params.n_threads or 2,
-                               logger=None,
-                               fps=30,
-                               )
+    video_clip.write_videofile(
+        output_file,
+        audio_codec="aac",
+        temp_audiofile_path=output_dir,
+        threads=params.n_threads or 2,
+        logger=None,
+        fps=30,
+    )
     video_clip.close()
     logger.success("completed")
 

@@ -110,7 +110,7 @@ def _generate_response(prompt: str) -> str:
                 raise Exception(f"[{llm_provider}] returned an empty response")
 
         if llm_provider == "gemini":
-            genai.configure(api_key=api_key, transport='rest')
+            genai.configure(api_key=api_key, transport="rest")
 
             generation_config = {
                 "temperature": 0.5,
