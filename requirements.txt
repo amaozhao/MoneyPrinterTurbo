@@ -8,6 +8,7 @@ edge_tts
 fastapi
 faster-whisper
 g4f
+git-changelog
 google.generativeai
 isort
 loguru

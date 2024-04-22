@@ -192,3 +192,9 @@ def start(task_id, params: VideoParams):
         task_id, state=const.TASK_STATE_COMPLETE, progress=100, **kwargs
     )
     return kwargs
+
+
+# def start_test(task_id, params: VideoParams):
+#     print(f"start task {task_id} \n")
+#     time.sleep(5)
+#     print(f"task {task_id} finished \n")
