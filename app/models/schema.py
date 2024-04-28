@@ -1,7 +1,8 @@
 import warnings
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, List
 
+import pydantic
 from pydantic import BaseModel
 
 # 忽略 Pydantic 的特定警告
@@ -32,6 +33,11 @@ class VideoAspect(str, Enum):
         return 1080, 1920
 
 
+class _Config:
+    arbitrary_types_allowed = True
+
+
+@pydantic.dataclasses.dataclass(config=_Config)
 class MaterialInfo:
     provider: str = "pexels"
     url: str = ""
@@ -99,6 +105,9 @@ class VideoParams(BaseModel):
     video_concat_mode: Optional[VideoConcatMode] = VideoConcatMode.random.value
     video_clip_duration: Optional[int] = 5
     video_count: Optional[int] = 1
+
+    video_source: Optional[str] = "pexels"
+    video_materials: Optional[List[MaterialInfo]] = None  # 用于生成视频的素材
 
     video_language: Optional[str] = ""  # auto detect
 
